@@ -13,10 +13,7 @@ interface IZKCreditVerifier {
      * @param _publicInputs Array of public inputs to the proof
      * @return True if the proof is valid, false otherwise
      */
-    function verifyProof(
-        bytes calldata _proof,
-        uint256[] calldata _publicInputs
-    ) external view returns (bool);
+    function verifyProof(bytes calldata _proof, uint256[] calldata _publicInputs) external view returns (bool);
 
     /**
      * @dev Gets the verification key hash used for this verifier
