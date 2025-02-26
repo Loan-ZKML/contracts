@@ -23,11 +23,9 @@ interface ICollateralCalculator {
     struct CollateralRequirement {
         uint256 requiredPercentage; // Collateral percentage (in basis points: 8000 = 80%)
         uint256 requiredAmount; // Actual collateral amount required for the requested loan
+        // optional enhanced tier
+        CreditTier tier; // The credit tier this requirement is based on
     }
-    /**
-     * optional enhanced tier
-     *         CreditTier tier;             // The credit tier this requirement is based on
-     */
 
     /**
      * @dev Get collateral requirement for a specific address and loan amount
