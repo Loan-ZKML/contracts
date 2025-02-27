@@ -13,11 +13,12 @@ interface IEnhancedLoanManager is ICreditScoreLoanManager {
      * @dev Enum representing loan statuses
      */
     enum LoanStatus {
-        PENDING,    // Loan created but not yet funded
-        ACTIVE,     // Loan is active
-        OVERDUE,    // Loan has missed payments
+        PENDING, // Loan created but not yet funded
+        ACTIVE, // Loan is active
+        OVERDUE, // Loan has missed payments
         LIQUIDATED, // Loan was liquidated due to insufficient collateral
-        REPAID      // Loan was fully repaid
+        REPAID // Loan was fully repaid
+
     }
 
     /**
@@ -29,9 +30,9 @@ interface IEnhancedLoanManager is ICreditScoreLoanManager {
         uint256 principal;
         uint256 collateralAmount;
         uint256 collateralPercentage; // In basis points (8000 = 80%)
-        uint256 interestRate;         // In basis points (500 = 5%)
+        uint256 interestRate; // In basis points (500 = 5%)
         uint256 startTime;
-        uint256 duration;             // In seconds
+        uint256 duration; // In seconds
         uint256 lastPaymentTime;
         uint256 amountRepaid;
         LoanStatus status;
@@ -41,32 +42,19 @@ interface IEnhancedLoanManager is ICreditScoreLoanManager {
     /**
      * @dev Event emitted when a loan payment is made
      */
-    event LoanPayment(
-        uint256 indexed loanId,
-        address indexed borrower,
-        uint256 amountPaid,
-        uint256 remainingPrincipal
-    );
+    event LoanPayment(uint256 indexed loanId, address indexed borrower, uint256 amountPaid, uint256 remainingPrincipal);
 
     /**
      * @dev Event emitted when a loan is liquidated
      */
     event LoanLiquidated(
-        uint256 indexed loanId,
-        address indexed borrower,
-        uint256 collateralLiquidated,
-        address liquidator
+        uint256 indexed loanId, address indexed borrower, uint256 collateralLiquidated, address liquidator
     );
 
     /**
      * @dev Event emitted when a loan is fully repaid
      */
-    event LoanRepaid(
-        uint256 indexed loanId,
-        address indexed borrower,
-        uint256 totalPaid,
-        uint256 collateralReturned
-    );
+    event LoanRepaid(uint256 indexed loanId, address indexed borrower, uint256 totalPaid, uint256 collateralReturned);
 
     /**
      * @dev Request a loan with a ZK proof to update credit score in one transaction
@@ -141,26 +129,23 @@ interface IEnhancedLoanManager is ICreditScoreLoanManager {
      * @param _priceFeed Address of the price feed oracle
      * @param _liquidationThreshold Liquidation threshold in basis points (7500 = 75%)
      */
-    function addSupportedCollateral(
-        address _collateralToken,
-        address _priceFeed,
-        uint256 _liquidationThreshold
-    ) external;
+    function addSupportedCollateral(address _collateralToken, address _priceFeed, uint256 _liquidationThreshold)
+        external;
 
     /**
      * @dev Update interest rates based on credit tier
      * @param _creditTier Credit tier enum value
      * @param _interestRate New interest rate in basis points
      */
-    function updateInterestRate(
-        ICollateralCalculator.CreditTier _creditTier,
-        uint256 _interestRate
-    ) external;
+    function updateInterestRate(ICollateralCalculator.CreditTier _creditTier, uint256 _interestRate) external;
 
     /**
      * @dev Get current interest rate for a credit tier
      * @param _creditTier Credit tier enum value
      * @return interestRate Interest rate in basis points
      */
-    function getInterestRate(ICollateralCalculator.CreditTier _creditTier) external view returns (uint256 interestRate);
+    function getInterestRate(ICollateralCalculator.CreditTier _creditTier)
+        external
+        view
+        returns (uint256 interestRate);
 }

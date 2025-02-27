@@ -8,6 +8,12 @@ pragma solidity ^0.8.28;
  */
 interface ICreditScoreLoanManager {
     /**
+     * @dev Event emitted when a credit score is validated with ZK proof
+     */
+    event CreditScoreValidated(address indexed borrower, uint256 creditScoreTier, bytes32 proofHash);
+
+    /**
+     * Optional for a more comprehensive credit score implementation
      * @dev Event emitted when a new loan is created
      */
     event LoanCreated(
@@ -17,11 +23,6 @@ interface ICreditScoreLoanManager {
         uint256 collateralAmount,
         uint256 collateralPercentage
     );
-
-    /**
-     * @dev Event emitted when a credit score is validated with ZK proof
-     */
-    event CreditScoreValidated(address indexed borrower, uint256 creditScoreTier, bytes32 proofHash);
 
     /**
      * @dev Submit a credit score ZK proof to update borrower's credit tier
