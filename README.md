@@ -1,66 +1,47 @@
-## Foundry
+# Smart Contract Layer (Solidity)
+- Base loan management contract
+- Collateral tiers
+- Integration with ZK verifier
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+# Development Environment
 
-Foundry consists of:
+## `asdf` - 3rd Party Tools Version Manager
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+We are suggesting [asdf](https://asdf-vm.com/) as the version manager for 3rd party tools.
+This is an awesome tool that runs on many different platforms and uses one single file to
+manage all tools versions. The file is `.tool-versions`.
 
-## Documentation
+### Linux
 
-https://book.getfoundry.sh/
+For Linux, I have made sure that I have `go` installed and used the `go` installation
+instructions of `asdf` which are given [here](https://asdf-vm.com/guide/getting-started.html#_1-install-asdf).
 
-## Usage
+### Bash Shell
 
-### Build
+Then on my `.bashrc` I also added the following:
 
-```shell
-$ forge build
+```
+export PATH=$HOME/.asdf/shims:$PATH
+. <(asdf completion bash)
 ```
 
-### Test
+## Foundry (not Hardhat)
 
-```shell
-$ forge test
+**Important**: This is not installed using `asdf`.
+
+We work with [Foundry](https://book.getfoundry.sh/). Please, follow the installation
+instructions [here](https://book.getfoundry.sh/getting-started/installation).
+
+We recommend that you install and use the `stable` release of the tools:
+
+I used the following command to install `foundryup`:
+
+```
+curl -L https://foundry.paradigm.xyz | bash
 ```
 
-### Format
+Then I restarted my shell and used the command:
 
-```shell
-$ forge fmt
 ```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+foundryup --install stable
 ```
