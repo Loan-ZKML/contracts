@@ -24,12 +24,23 @@ contract CollateralizedLoan is Ownable {
         // address lender;
     }
 
-    IERC20 public collateralToken;
+    IERC20 private s_collateralToken;
+    uint256 private s_interestRate; // percentage, e.g. 20%
 
     constructor(
-        address initialOwner,
-        IERC20 _collateralToken
-    ) Ownable(initialOwner) {
-        collateralToken = IERC20(_collateralToken);
+        address _initialOwner,
+        IERC20 _collateralToken,
+        uint256 _interestRate
+    ) Ownable(_initialOwner) {
+        s_collateralToken = IERC20(_collateralToken);
+        s_interestRate = _interestRate;
+    }
+
+    function collateralToken() public view returns (IERC20) {
+        return s_collateralToken;
+    }
+
+    function interestRate() public view returns (uint256) {
+        return s_interestRate;
     }
 }

@@ -9,10 +9,15 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract CollateralizedLoanTest is Test {
     CollateralizedLoan loan;
     IERC20 collateralToken;
+    uint256 constant INTEREST_RATE = 20; // 20%
 
     function setUp() public {
         collateralToken = new ERC20Mock();
-        loan = new CollateralizedLoan(msg.sender, collateralToken);
+        loan = new CollateralizedLoan(
+            msg.sender,
+            collateralToken,
+            INTEREST_RATE
+        );
     }
 
     // -------
@@ -22,10 +27,17 @@ contract CollateralizedLoanTest is Test {
         assertEq(address(loan.owner()), address(msg.sender));
     }
 
-    // ----------------
-    // collateralToken
-    // ----------------
+    // ------------------
+    // collateralToken()
+    // ------------------
     function test_onDeploymentWeSetPublicCollateralERC20Token() public view {
         assertEq(address(loan.collateralToken()), address(collateralToken));
+    }
+
+    // -------------
+    // interestRate()
+    // -------------
+    function test_interestRate_returnsTheInterestRate() public view {
+        assertEq(loan.interestRate(), INTEREST_RATE);
     }
 }
