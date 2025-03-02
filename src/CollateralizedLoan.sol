@@ -34,7 +34,7 @@ contract CollateralizedLoan is Ownable {
     // --------------------------------------
     // Events
     // --------------------------------------
-    event LoanGranted(address borrower, uint256 borrowedAmount, uint256 collateralAmount);
+    event LoanGranted(address indexed borrower, uint256 borrowedAmount, uint256 collateralAmount);
 
     event LoanRepaid(address borrower, uint256 repaidAmount);
     //-----------------------------------------------------------------------
@@ -84,6 +84,10 @@ contract CollateralizedLoan is Ownable {
         uint256 l_extraAmountToLiquidate = (_borrowedAmount * s_minCollateralizationRatio) / 100;
 
         return (_borrowedAmount + l_extraAmountToLiquidate);
+    }
+
+    function myLoanInfo() public view returns (LoanInfo memory) {
+        return s_loans[msg.sender];
     }
 
     // ----------------------------------------------------------
@@ -136,8 +140,8 @@ contract CollateralizedLoan is Ownable {
         }
 
         // we take from the borrower and we move Collateral to the contract
-        // But has the +msg.sender+ approved the +CollateralizedLoan+ to
-        // get money/collateralToken from +msg.sender+ and put it to itself?
+        // The +msg.sender+ (the borrower) needs to have approved the +CollateralizedLoan+ to
+        // get money/collateralToken from +msg.sender+ and deposit to it itself
         //
         s_collateralToken.transferFrom(msg.sender, address(this), _collateralAmount);
 

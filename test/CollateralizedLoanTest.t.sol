@@ -4,6 +4,9 @@ pragma solidity 0.8.28;
 import {CollateralizedLoan} from "../src/CollateralizedLoan.sol";
 import {Test, console} from "forge-std/Test.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
+import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol"; // Adjust the import path as necessary
+
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract CollateralizedLoanTest is Test {
     CollateralizedLoan s_loan;
@@ -50,6 +53,10 @@ contract CollateralizedLoanTest is Test {
 
         assertEq(result, expectedResult);
     }
+
+    // -----------------------------
+    // myLoanInfo()
+    // -----------------------------
 
     // -----------------------------
     // requestLoan()
@@ -118,6 +125,72 @@ contract CollateralizedLoanTest is Test {
             )
         );
         s_loan.requestLoan(borrowedAmount, collateralAmount);
+    }
+
+    function test_requestLoan_whenBorrowerHasNotApprovedContractToGetCollateralFromTheirAccount_itReverts() public {
+        address borrower = makeAddr("panos");
+        uint256 borrowedAmount = 30 ether;
+        uint256 collateralAmount = borrowedAmount + (borrowedAmount * MIN_COLLATERALIZATION_RATIO) / 100;
+        vm.deal(address(s_loan), borrowedAmount);
+        s_collateralToken.mint(borrower, collateralAmount);
+
+        // fire
+        vm.prank(borrower);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20Errors.ERC20InsufficientAllowance.selector, address(s_loan), 0, collateralAmount
+            )
+        );
+        s_loan.requestLoan(borrowedAmount, collateralAmount);
+    }
+
+    function test_requestLoan_movesMoneyAcrossBorrowerAndLoanContract() public {
+        address borrower = makeAddr("panos");
+        uint256 borrowedAmount = 30 ether;
+        uint256 collateralAmount = borrowedAmount + (borrowedAmount * MIN_COLLATERALIZATION_RATIO) / 100;
+        vm.deal(address(s_loan), borrowedAmount);
+        s_collateralToken.mint(borrower, collateralAmount);
+        vm.prank(borrower);
+        s_collateralToken.approve(address(s_loan), collateralAmount);
+
+        uint256 loanEtherBalanceBefore = address(s_loan).balance;
+        uint256 borrowerEtherBalanceBefore = borrower.balance;
+        uint256 loanCollateralBalanceBefore = s_collateralToken.balanceOf(address(s_loan));
+        uint256 borrowerCollateralBalanceBefore = s_collateralToken.balanceOf(borrower);
+
+        // fire
+        vm.prank(borrower);
+
+        vm.expectEmit(true, true, false, true, address(s_collateralToken));
+        emit IERC20.Transfer(borrower, address(s_loan), collateralAmount);
+
+        vm.expectEmit(true, false, false, true, address(s_loan));
+        emit CollateralizedLoan.LoanGranted(borrower, borrowedAmount, collateralAmount);
+
+        s_loan.requestLoan(borrowedAmount, collateralAmount);
+        // -----
+
+        uint256 loanEtherBalanceAfter = address(s_loan).balance;
+        assertEq(loanEtherBalanceAfter, loanEtherBalanceBefore - borrowedAmount);
+
+        uint256 borrowerEtherBalanceAfter = borrower.balance;
+        assertEq(borrowerEtherBalanceAfter, borrowerEtherBalanceBefore + borrowedAmount);
+
+        uint256 loanCollateralBalanceAfter = s_collateralToken.balanceOf(address(s_loan));
+        assertEq(loanCollateralBalanceAfter, loanCollateralBalanceBefore + collateralAmount);
+
+        uint256 borrowerCollateralBalanceAfter = s_collateralToken.balanceOf(borrower);
+        assertEq(borrowerCollateralBalanceAfter, borrowerCollateralBalanceBefore - collateralAmount);
+
+        vm.prank(borrower);
+        CollateralizedLoan.LoanInfo memory loanInfo;
+        loanInfo = s_loan.myLoanInfo();
+
+        assertEq(loanInfo.borrower, borrower);
+        assertEq(loanInfo.borrowedAmount, borrowedAmount);
+        assertEq(loanInfo.collateralAmount, collateralAmount);
+        assertEq(loanInfo.requestedAt, block.timestamp);
+        assertEq(loanInfo.paid, false);
     }
 
     // -----------------------------
