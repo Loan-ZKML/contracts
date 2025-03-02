@@ -58,9 +58,7 @@ contract CollateralizedLoanTest is Test {
         address borrower = makeAddr("panos");
         (uint256 borrowedAmount, uint256 collateralAmount) = borrowerHasActiveLoan(borrower);
 
-        // ----
         // fire
-        // ----
 
         vm.prank(borrower);
         vm.expectRevert(
@@ -69,6 +67,28 @@ contract CollateralizedLoanTest is Test {
             )
         );
         s_loan.requestLoan(borrowedAmount, collateralAmount);
+    }
+
+    function test_requestLoan_whenCollateralAmountIsBelowMinimumRequired_itReverts() public {
+        address borrower = makeAddr("panos");
+        uint256 borrowedAmountRequested = 30 ether;
+        uint256 minCollateralizationRatio = MIN_COLLATERALIZATION_RATIO;
+        uint256 minimumCollateralRequired =
+            borrowedAmountRequested + (borrowedAmountRequested * minCollateralizationRatio) / 100;
+        uint256 collateralProvided = minimumCollateralRequired - 1;
+
+        // fire
+        vm.prank(borrower);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                CollateralizedLoan.NotEnoughCollateralProvidedForBorrowedAmountError.selector,
+                borrowedAmountRequested,
+                minCollateralizationRatio,
+                minimumCollateralRequired,
+                collateralProvided
+            )
+        );
+        s_loan.requestLoan(borrowedAmountRequested, collateralProvided);
     }
 
     // -----------------------------
