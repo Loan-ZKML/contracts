@@ -60,22 +60,30 @@ Listening 127.0.0.1:8545
 
 ```
 
+### Using `forge create` (not preferred)
+
 Then you can run the following commands to deploy to the local network:
 
 Note: For owner I use the first owner that `anvil` provides me with. Same for private key.
 
-### Step 1
+#### Step 1
 
 Deploy the ERCMock contract. Note down its address:
 
 ```bash
-$ ./deploy_ercmock.sh 'http://127.0.0.1:8545' '0xac..a...private key....80'
+$ ./fc_deploy_ercmock.sh 'http://127.0.0.1:8545' '0xac..a...private key....80'
 ```
 
-### Step 2
+#### Step 2
 
 Deploy the Collateralized Loan contract:
 
 ```bash
-$ ./deploy_collateralized_loan.sh 'http://127.0.0.1:8545' '0xac..a...private key....80' '0xf39Fd...an owner...ffFb92266' '0x5Fb...ERC20Mock Address...0aa3' 20 5
+$ ./fc_deploy_collateralized_loan.sh 'http://127.0.0.1:8545' '0xac..a...private key....80' '0xf39Fd...an owner...ffFb92266' '0x5Fb...ERC20Mock Address...0aa3' 20 5
+```
+
+### Using `forge script`
+
+```bash
+$ ./fs_deploy_collateralized_loan.sh 'http://127.0.0.1:8545' '0xac0 private key ae784d7bf4f2ff80'
 ```
