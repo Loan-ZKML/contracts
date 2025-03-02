@@ -2,7 +2,12 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
+    branches:
+      - main
+    types: [ready_for_review, opened, reopened, synchronize]
   workflow_dispatch:
 
 env:
@@ -39,5 +44,5 @@ jobs:
 
       - name: Run Forge tests
         run: |
-          forge test -vvv
+          forge test -vvvvv
         id: test
