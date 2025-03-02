@@ -48,3 +48,34 @@ Then I restarted my shell and used the command:
 ```
 foundryup --install stable
 ```
+
+## Deployment and Verification of Smart Contract(s)
+
+Start a local chain:
+
+```bash
+$ anvil
+...
+Listening 127.0.0.1:8545
+
+```
+
+Then you can run the following commands to deploy to the local network:
+
+Note: For owner I use the first owner that `anvil` provides me with. Same for private key.
+
+### Step 1
+
+Deploy the ERCMock contract. Note down its address:
+
+```bash
+$ ./deploy_ercmock.sh 'http://127.0.0.1:8545' '0xac..a...private key....80'
+```
+
+### Step 2
+
+Deploy the Collateralized Loan contract:
+
+```bash
+$ ./deploy_collateralized_loan.sh 'http://127.0.0.1:8545' '0xac..a...private key....80' '0xf39Fd...an owner...ffFb92266' '0x5Fb...ERC20Mock Address...0aa3' 20 5
+```
