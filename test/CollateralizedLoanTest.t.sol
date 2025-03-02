@@ -57,6 +57,40 @@ contract CollateralizedLoanTest is Test {
     // -----------------------------
     // myLoanInfo()
     // -----------------------------
+    function test_myLoanInfo_whenCallerHasBorrowed_itReturnsWhetherCallerHasBorrowedAndInfoAboutIt() public {
+        address borrower = makeAddr("panos");
+        (uint256 borrowedAmount, uint256 collateralAmount) = borrowerHasActiveLoan(borrower);
+
+        // fire
+        vm.prank(borrower);
+        CollateralizedLoan.LoanInfo memory loanInfo;
+        loanInfo = s_loan.myLoanInfo();
+        // -----
+
+        assertEq(loanInfo.borrower, borrower);
+        assertEq(loanInfo.borrowedAmount, borrowedAmount);
+        assertEq(loanInfo.collateralAmount, collateralAmount);
+        assertEq(loanInfo.requestedAt, block.timestamp);
+        assertEq(loanInfo.paid, false);
+    }
+
+    function test_myLoanInfo_whenCallerHasNotBorrowed_itReturnsEmptyInformation() public {
+        address borrower = makeAddr("panos");
+
+        // fire
+        vm.prank(borrower);
+        CollateralizedLoan.LoanInfo memory loanInfo;
+        loanInfo = s_loan.myLoanInfo();
+        // -----
+
+        assertEq(loanInfo.borrower, address(0));
+        assertEq(loanInfo.borrowedAmount, 0);
+        assertEq(loanInfo.collateralAmount, 0);
+        assertEq(loanInfo.requestedAt, 0);
+        assertEq(loanInfo.paid, false);
+    }
+
+    // TODO: We may need to add some more tests here when the user has returned the loan
 
     // -----------------------------
     // requestLoan()
