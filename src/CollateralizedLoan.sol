@@ -15,15 +15,15 @@ contract CollateralizedLoan is Ownable {
         uint256 collateralAmount;
         uint256 requestedAt;
         bool paid;
-        // uint256 amount;
-        // uint256 collateral;
-        // uint256 interest;
-        // uint256 duration;
-        // uint256 start;
-        // uint256 end;
-        // address borrower;
-        // address lender;
     }
+    // uint256 amount;
+    // uint256 collateral;
+    // uint256 interest;
+    // uint256 duration;
+    // uint256 start;
+    // uint256 end;
+    // address borrower;
+    // address lender;
 
     IERC20 s_collateralToken;
     uint256 s_interestRate; // percentage, e.g. 20%. It can be more than 100
@@ -34,11 +34,7 @@ contract CollateralizedLoan is Ownable {
     // --------------------------------------
     // Events
     // --------------------------------------
-    event LoanGranted(
-        address borrower,
-        uint256 borrowedAmount,
-        uint256 collateralAmount
-    );
+    event LoanGranted(address borrower, uint256 borrowedAmount, uint256 collateralAmount);
 
     event LoanRepaid(address borrower, uint256 repaidAmount);
     //-----------------------------------------------------------------------
@@ -53,28 +49,13 @@ contract CollateralizedLoan is Ownable {
         uint256 collateralProvided
     );
 
-    error LenderDoesNotHaveEnoughEtherError(
-        uint256 amountRequested,
-        uint256 lenderBalance
-    );
+    error LenderDoesNotHaveEnoughEtherError(uint256 amountRequested, uint256 lenderBalance);
 
-    error BorrowerDoesNotHaveEnoughCollateralError(
-        address borrower,
-        uint256 amountRequired,
-        uint256 borrowerBalance
-    );
+    error BorrowerDoesNotHaveEnoughCollateralError(address borrower, uint256 amountRequired, uint256 borrowerBalance);
 
-    error BorrowerHasUnpaidLoanError(
-        address borrower,
-        uint256 borrowedAmount,
-        uint256 requestedAt
-    );
+    error BorrowerHasUnpaidLoanError(address borrower, uint256 borrowedAmount, uint256 requestedAt);
 
-    error SendingEtherFailedError(
-        address sender,
-        address recipient,
-        uint256 value
-    );
+    error SendingEtherFailedError(address sender, address recipient, uint256 value);
     // ----------------------------------------------------
 
     constructor(
@@ -99,11 +80,8 @@ contract CollateralizedLoan is Ownable {
         return s_interestRate;
     }
 
-    function minimumCollateralRequired(
-        uint256 _borrowedAmount
-    ) public view returns (uint256) {
-        uint256 l_extraAmountToLiquidate = (_borrowedAmount *
-            s_minCollateralizationRatio) / 100;
+    function minimumCollateralRequired(uint256 _borrowedAmount) public view returns (uint256) {
+        uint256 l_extraAmountToLiquidate = (_borrowedAmount * s_minCollateralizationRatio) / 100;
 
         return (_borrowedAmount + l_extraAmountToLiquidate);
     }
@@ -119,10 +97,7 @@ contract CollateralizedLoan is Ownable {
     // send. It is equal to the +_borrowedAmount+ increased by
     // its +s_minCollateralizationRatio+.
     //
-    function requestLoan(
-        uint256 _borrowedAmount,
-        uint256 _collateralAmount
-    ) external {
+    function requestLoan(uint256 _borrowedAmount, uint256 _collateralAmount) external {
         LoanInfo storage loanInfo = s_loans[msg.sender];
         if (loanInfo.borrowedAmount > 0 && !loanInfo.paid) {
             revert BorrowerHasUnpaidLoanError({
@@ -132,9 +107,7 @@ contract CollateralizedLoan is Ownable {
             });
         }
 
-        uint256 l_minimumCollateralRequired = minimumCollateralRequired(
-            _borrowedAmount
-        );
+        uint256 l_minimumCollateralRequired = minimumCollateralRequired(_borrowedAmount);
 
         if (_collateralAmount < l_minimumCollateralRequired) {
             revert NotEnoughCollateralProvidedForBorrowedAmountError({
@@ -152,9 +125,7 @@ contract CollateralizedLoan is Ownable {
             });
         }
 
-        uint256 borrowerCollateralBalance = s_collateralToken.balanceOf(
-            msg.sender
-        );
+        uint256 borrowerCollateralBalance = s_collateralToken.balanceOf(msg.sender);
 
         if (borrowerCollateralBalance < _collateralAmount) {
             revert BorrowerDoesNotHaveEnoughCollateralError({
@@ -168,11 +139,7 @@ contract CollateralizedLoan is Ownable {
         // But has the +msg.sender+ approved the +CollateralizedLoan+ to
         // get money/collateralToken from +msg.sender+ and put it to itself?
         //
-        s_collateralToken.transferFrom(
-            msg.sender,
-            address(this),
-            _collateralAmount
-        );
+        s_collateralToken.transferFrom(msg.sender, address(this), _collateralAmount);
 
         _sendEthersTo(payable(msg.sender), _borrowedAmount);
 
@@ -191,17 +158,10 @@ contract CollateralizedLoan is Ownable {
     // private
     // -------
 
-    function _sendEthersTo(
-        address payable _recipient,
-        uint256 _amount
-    ) private {
-        (bool sent, ) = _recipient.call{value: _amount}("");
+    function _sendEthersTo(address payable _recipient, uint256 _amount) private {
+        (bool sent,) = _recipient.call{value: _amount}("");
         if (!sent) {
-            revert SendingEtherFailedError({
-                sender: address(this),
-                recipient: _recipient,
-                value: _amount
-            });
+            revert SendingEtherFailedError({sender: address(this), recipient: _recipient, value: _amount});
         }
     }
 }

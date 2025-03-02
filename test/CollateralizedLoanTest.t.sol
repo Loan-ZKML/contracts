@@ -12,22 +12,11 @@ contract CollateralizedLoanTest is Test {
     uint256 constant MIN_COLLATERALIZATION_RATIO = 10; // ?
 
     function setUp() public {
-        console.log(
-            "CollateralizedLoanTest#setUp(): msg.sender = ",
-            msg.sender
-        );
-        console.log(
-            "CollateralizedLoanTest#setUp(): address(this) = ",
-            address(this)
-        );
+        console.log("CollateralizedLoanTest#setUp(): msg.sender = ", msg.sender);
+        console.log("CollateralizedLoanTest#setUp(): address(this) = ", address(this));
 
         s_collateralToken = new ERC20Mock();
-        s_loan = new CollateralizedLoan(
-            msg.sender,
-            s_collateralToken,
-            INTEREST_RATE,
-            MIN_COLLATERALIZATION_RATIO
-        );
+        s_loan = new CollateralizedLoan(msg.sender, s_collateralToken, INTEREST_RATE, MIN_COLLATERALIZATION_RATIO);
     }
 
     // -------
@@ -57,9 +46,7 @@ contract CollateralizedLoanTest is Test {
     function test_returnsTheMinimumCollateralRequired() public view {
         uint256 borrowedAmount = 100 ether;
         uint256 result = s_loan.minimumCollateralRequired(borrowedAmount);
-        uint256 expectedResult = borrowedAmount +
-            (borrowedAmount * MIN_COLLATERALIZATION_RATIO) /
-            100;
+        uint256 expectedResult = borrowedAmount + (borrowedAmount * MIN_COLLATERALIZATION_RATIO) / 100;
 
         assertEq(result, expectedResult);
     }
@@ -69,10 +56,7 @@ contract CollateralizedLoanTest is Test {
     // -----------------------------
     function test_requestLoan_whenBorrowerHasUnpaidLoan_itReverts() public {
         address borrower = makeAddr("panos");
-        (
-            uint256 borrowedAmount,
-            uint256 collateralAmount
-        ) = borrowerHasActiveLoan(borrower);
+        (uint256 borrowedAmount, uint256 collateralAmount) = borrowerHasActiveLoan(borrower);
 
         // ----
         // fire
@@ -81,10 +65,7 @@ contract CollateralizedLoanTest is Test {
         vm.prank(borrower);
         vm.expectRevert(
             abi.encodeWithSelector(
-                CollateralizedLoan.BorrowerHasUnpaidLoanError.selector,
-                borrower,
-                borrowedAmount,
-                block.timestamp
+                CollateralizedLoan.BorrowerHasUnpaidLoanError.selector, borrower, borrowedAmount, block.timestamp
             )
         );
         s_loan.requestLoan(borrowedAmount, collateralAmount);
@@ -94,9 +75,10 @@ contract CollateralizedLoanTest is Test {
     // private utility functions
     // -----------------------------
 
-    function borrowerHasActiveLoan(
-        address _borrower
-    ) private returns (uint256 _borrowedAmount, uint256 _collateralAmount) {
+    function borrowerHasActiveLoan(address _borrower)
+        private
+        returns (uint256 _borrowedAmount, uint256 _collateralAmount)
+    {
         _borrowedAmount = 10 ether;
         _collateralAmount = 30 ether;
 
