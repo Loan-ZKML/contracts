@@ -68,26 +68,11 @@ contract CollateralizedLoanTest is Test {
     // requestLoan()
     // -----------------------------
     function test_requestLoan_whenBorrowerHasUnpaidLoan_itReverts() public {
-        // TODO: Maybe I could use +beforeTestSetup+ to set up
-        // some transaction state?
         address borrower = makeAddr("panos");
-        uint256 borrowedAmount = 10 ether;
-        uint256 collateralAmount = 30 ether;
-
-        // the lender needs to have enough in order to lend
-        vm.deal(address(s_loan), borrowedAmount);
-
-        // the borrower needs to have enough in order to send collateral
-        s_collateralToken.mint(borrower, collateralAmount);
-
-        // the borrower needs to have given the CollateralizedLoan
-        // smart contract the allowance to transfer collateral from their
-        // account to the smart contract account.
-        vm.prank(borrower);
-        s_collateralToken.approve(address(s_loan), collateralAmount);
-
-        vm.prank(borrower);
-        s_loan.requestLoan(borrowedAmount, collateralAmount);
+        (
+            uint256 borrowedAmount,
+            uint256 collateralAmount
+        ) = borrowerHasActiveLoan(borrower);
 
         // ----
         // fire
@@ -103,5 +88,31 @@ contract CollateralizedLoanTest is Test {
             )
         );
         s_loan.requestLoan(borrowedAmount, collateralAmount);
+    }
+
+    // -----------------------------
+    // private utility functions
+    // -----------------------------
+
+    function borrowerHasActiveLoan(
+        address _borrower
+    ) private returns (uint256 _borrowedAmount, uint256 _collateralAmount) {
+        _borrowedAmount = 10 ether;
+        _collateralAmount = 30 ether;
+
+        // the lender needs to have enough in order to lend
+        vm.deal(address(s_loan), _borrowedAmount);
+
+        // the borrower needs to have enough in order to send collateral
+        s_collateralToken.mint(_borrower, _collateralAmount);
+
+        // the borrower needs to have given the CollateralizedLoan
+        // smart contract the allowance to transfer collateral from their
+        // account to the smart contract account.
+        vm.prank(_borrower);
+        s_collateralToken.approve(address(s_loan), _collateralAmount);
+
+        vm.prank(_borrower);
+        s_loan.requestLoan(_borrowedAmount, _collateralAmount);
     }
 }
