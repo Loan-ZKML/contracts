@@ -7,6 +7,9 @@
 
 ## `asdf` - 3rd Party Tools Version Manager
 
+**Important:** I have encountered installation problems with `v0.16.x`. So, I have
+stayed to `v0.15.x`.
+
 We are suggesting [asdf](https://asdf-vm.com/) as the version manager for 3rd party tools.
 This is an awesome tool that runs on many different platforms and uses one single file to
 manage all tools versions. The file is `.tool-versions`.
