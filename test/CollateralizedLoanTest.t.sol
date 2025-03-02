@@ -91,6 +91,19 @@ contract CollateralizedLoanTest is Test {
         s_loan.requestLoan(borrowedAmountRequested, collateralProvided);
     }
 
+    function test_requestLoan_whenContractDoesNotHaveEnoughEther_itReverts() public {
+        address borrower = makeAddr("panos");
+        uint256 borrowedAmount = 30 ether;
+        uint256 collateralAmount = borrowedAmount + (borrowedAmount * MIN_COLLATERALIZATION_RATIO) / 100;
+
+        // fire
+        vm.prank(borrower);
+        vm.expectRevert(
+            abi.encodeWithSelector(CollateralizedLoan.LenderDoesNotHaveEnoughEtherError.selector, borrowedAmount, 0)
+        );
+        s_loan.requestLoan(borrowedAmount, collateralAmount);
+    }
+
     // -----------------------------
     // private utility functions
     // -----------------------------
