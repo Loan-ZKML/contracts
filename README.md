@@ -49,7 +49,7 @@ Then I restarted my shell and used the command:
 foundryup --install stable
 ```
 
-## Deployment and Verification of Smart Contract(s)
+## Deployment of Smart Contract(s)
 
 Start a local chain:
 
@@ -85,5 +85,33 @@ $ ./fc_deploy_collateralized_loan.sh 'http://127.0.0.1:8545' '0xac..a...private 
 ### Using `forge script`
 
 ```bash
-$ ./fs_deploy_collateralized_loan.sh 'http://127.0.0.1:8545' '0xac0 private key ae784d7bf4f2ff80'
+$ ./fs_deploy_collateralized_loan.sh 'http://127.0.0.1:8545' <keystore account>
+```
+
+### Request Some Loan
+
+After having done the deployment, the following can be used to execute a request for loan:
+
+```bash
+$ ./fs_request_loan.sh 'http://127.0.0.1:8545' <sender> <keystore1> <keystore2>
+```
+
+This will send 30 Ether to `0x70997970C51812dc3A010C7d01b50e0d17dc79C8`. Hence, this account will then have
+balance: `10029.999872713728857791`, which you can check with:
+
+```bash
+cast balance --rpc-url 'http://127.0.0.1:8545' 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 --ether
+```
+
+And the contract will have 30 ether less: `70.000000000000000000`. You can check it with:
+
+```bash
+$ cast balance --rpc-url 'http://127.0.0.1:8545' 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 --ether
+```
+
+And you can also run the following script to see what is the smart contract in `ERC20Mock`
+tokens.
+
+```bash
+$ cast balance --rpc-url 'http://127.0.0.1:8545' --ether --erc20 0x5FbDB2315678afecb367f032d93F642f64180aa3 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
 ```

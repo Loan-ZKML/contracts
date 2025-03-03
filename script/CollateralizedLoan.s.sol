@@ -17,7 +17,9 @@ contract CollateralizedLoanScript is Script {
             uint256 interestRate = 20;
             uint256 minCollateralizationRatio = 5;
 
-            new CollateralizedLoan(initialOwner, collateralToken, interestRate, minCollateralizationRatio);
+            new CollateralizedLoan{value: 100 ether}(
+                initialOwner, collateralToken, interestRate, minCollateralizationRatio
+            );
 
             vm.stopBroadcast();
         }

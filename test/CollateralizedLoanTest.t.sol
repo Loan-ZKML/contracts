@@ -19,7 +19,9 @@ contract CollateralizedLoanTest is Test {
         console.log("CollateralizedLoanTest#setUp(): address(this) = ", address(this));
 
         s_collateralToken = new ERC20Mock();
-        s_loan = new CollateralizedLoan(msg.sender, s_collateralToken, INTEREST_RATE, MIN_COLLATERALIZATION_RATIO);
+        s_loan = new CollateralizedLoan{value: 100 ether}(
+            msg.sender, s_collateralToken, INTEREST_RATE, MIN_COLLATERALIZATION_RATIO
+        );
     }
 
     // -------
@@ -137,10 +139,16 @@ contract CollateralizedLoanTest is Test {
         uint256 borrowedAmount = 30 ether;
         uint256 collateralAmount = borrowedAmount + (borrowedAmount * MIN_COLLATERALIZATION_RATIO) / 100;
 
+        s_loan = new CollateralizedLoan{value: (borrowedAmount - 1)}(
+            msg.sender, s_collateralToken, INTEREST_RATE, MIN_COLLATERALIZATION_RATIO
+        );
+
         // fire
         vm.prank(borrower);
         vm.expectRevert(
-            abi.encodeWithSelector(CollateralizedLoan.LenderDoesNotHaveEnoughEtherError.selector, borrowedAmount, 0)
+            abi.encodeWithSelector(
+                CollateralizedLoan.LenderDoesNotHaveEnoughEtherError.selector, borrowedAmount, borrowedAmount - 1
+            )
         );
         s_loan.requestLoan(borrowedAmount, collateralAmount);
     }

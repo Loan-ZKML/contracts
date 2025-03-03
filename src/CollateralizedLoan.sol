@@ -63,7 +63,7 @@ contract CollateralizedLoan is Ownable {
         IERC20 _collateralToken,
         uint256 _interestRate,
         uint256 _minCollateralizationRatio
-    ) Ownable(_initialOwner) {
+    ) payable Ownable(_initialOwner) {
         s_collateralToken = IERC20(_collateralToken);
         s_interestRate = _interestRate;
         s_minCollateralizationRatio = _minCollateralizationRatio;
