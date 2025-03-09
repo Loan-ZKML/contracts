@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity 0.8.28;
 
 /**
  * @title ICollateralCalculator
@@ -16,6 +16,8 @@ interface ICollateralCalculator {
         HIGH // High score - 80% collateral
 
     }
+
+    event CreditScoreUpdated(address indexed borrower, uint256 creditScore, CreditTier newTier);
 
     /**
      * @dev Struct containing collateral requirement details
@@ -37,6 +39,8 @@ interface ICollateralCalculator {
         external
         view
         returns (CollateralRequirement memory);
+
+    function getBorrowerCreditTier(address _borrower) external view returns (CreditTier);
 
     /**
      * @dev Update credit score for an address after verifying ZK proof

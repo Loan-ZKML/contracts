@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity 0.8.28;
 
 /**
  * @title IZKCreditVerifier
@@ -19,5 +19,5 @@ interface IZKCreditVerifier {
      * @dev Gets the verification key hash used for this verifier
      * @return The hash of the verification key
      */
-    function getVerificationKeyHash() external view returns (bytes32);
+    //function getVerificationKeyHash() external view returns (bytes32);
 }
