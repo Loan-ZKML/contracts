@@ -28,16 +28,10 @@ contract ZKCreditVerifier is IZKCreditVerifier {
      * @param _publicInputs Array of public inputs to the proof
      * @return True if the proof is valid, false otherwise
      */
-    /**
-     * @dev Verifies a zero-knowledge proof of credit score computation
-     * @param _proof The zkSNARK proof bytes
-     * @param _publicInputs Array of public inputs to the proof
-     * @return True if the proof is valid, false otherwise
-     */
     function verifyProof(bytes calldata _proof, uint256[] calldata _publicInputs)
         external
         override
-        view returns (bool)
+        returns (bool)
     {
         // Simply delegate to the Halo2Verifier contract
         return halo2Verifier.verifyProof(_proof, _publicInputs);
@@ -52,7 +46,7 @@ contract ZKCreditVerifier is IZKCreditVerifier {
      */
     function verifyProofAndExtractScore(bytes calldata _proof, uint256[] calldata _publicInputs)
         external
-        view returns (bool verified, uint256 creditScore)
+        returns (bool verified, uint256 creditScore)
     {
         require(_publicInputs.length > 0, "Public inputs must include credit score");
         
