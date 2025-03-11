@@ -7,7 +7,10 @@ import "../src/ZKCreditVerifier.sol";
 import "../src/CreditScoreLoanManager.sol";
 import "../src/Halo2Verifier.sol";
 import "../src/ICollateralCalculator.sol";
-import "../test/CreditScoreTest.t.sol";  // Import to use TestCreditScoreLoanManager
+
+/*
+ * ************ Dependency with Anvil running at -----------> http://localhost:8545
+ */
 
 contract ZKCreditScript is Script {
     // The test account from proof generation
@@ -26,6 +29,7 @@ contract ZKCreditScript is Script {
         view
         returns (bytes memory proof, uint256[] memory publicInputs)
     {
+        // Original implementation unchanged
         bytes memory rawCalldata = vm.readFileBinary("script/calldata.json");
         console.log("Loaded calldata.json, size:", rawCalldata.length);
 
@@ -127,14 +131,14 @@ contract ZKCreditScript is Script {
         console.log("Deployed Halo2Verifier at:", address(halo2Verifier));
 
         ZKCreditVerifier zkVerifier = new ZKCreditVerifier(address(halo2Verifier));
-        console.log("Deployed SimpleZKVerifier at:", address(zkVerifier));
+        console.log("Deployed ZKCreditVerifier at:", address(zkVerifier));
 
         CollateralCalculator calculator = new CollateralCalculator();
-        console.log("Deployed SimpleCollateralCalculator at:", address(calculator));
+        console.log("Deployed CollateralCalculator at:", address(calculator));
 
         CreditScoreLoanManager loanManager =
             new CreditScoreLoanManager(address(zkVerifier), address(calculator));
-        console.log("Deployed CreditScoreLoanManager at:", address(loanManager));
+        console.log("Deployed ScaledCreditScoreLoanManager at:", address(loanManager));
 
         // Check initial collateral requirement
         // Get initial collateral requirement struct
@@ -145,7 +149,7 @@ contract ZKCreditScript is Script {
         console.log(" - Amount for 1 ETH loan:", initialRequirement.requiredAmount);
         console.log(" - Tier:", uint8(initialRequirement.tier));
 
-        // Load proof and public inputs
+        // Load proof and original public inputs
         (bytes memory proof, uint256[] memory publicInputs) = loadProofAndInputs();
 
         // Validate we have a proper proof
@@ -164,18 +168,26 @@ contract ZKCreditScript is Script {
             console.logBytes(reason);
         }
 
-        // Credit score (0.6 scaled to 0-1000 range)
-        uint256 loanAmount = 600;
+        // Log raw credit score
+        uint256 rawCreditScore = 0;
+        if (publicInputs.length > 0) {
+            rawCreditScore = publicInputs[0];
+        }
+        console.log("Raw credit score from proof:", rawCreditScore);
+        
+        // Calculate what the scaled value will be (for display only)
+        uint256 scaledScore = (rawCreditScore * 1000) / 10000;
+        if (scaledScore > 1000) scaledScore = 1000;
+        console.log("This will be scaled to approximately:", scaledScore);
 
         console.log("Submitting proof from address:", TEST_ADDRESS);
 
-        // Wrap in try-catch for better error reporting
-        try loanManager.submitCreditScoreProof(proof, publicInputs, 600) returns (bool success) {
+        // Use the original inputs without modification
+        try loanManager.submitCreditScoreProof(proof, publicInputs) returns (bool success) {
             if (success) {
                 console.log("Proof verification successful!");
 
                 // Check updated collateral requirement
-                // Get updated collateral requirement struct
                 ICollateralCalculator.CollateralRequirement memory newRequirement =
                     calculator.getCollateralRequirement(TEST_ADDRESS, 1 ether);
                 console.log("Updated collateral requirement:");

@@ -1,107 +1,119 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "./ICreditScoreLoanManager.sol";
-import "./ICollateralCalculator.sol";
-import "./IZKCreditVerifier.sol";
+import "./CollateralCalculator.sol";
+import "./ZKCreditVerifier.sol";
 
 /**
  * @title CreditScoreLoanManager
- * @dev Implementation of the ICreditScoreLoanManager interface that manages loan
- * collateral requirements based on verified credit scores
+ * @dev Variant of CreditScoreLoanManager that handles EZKL's output scaling
  */
-contract CreditScoreLoanManager is ICreditScoreLoanManager {
-    // Reference to the CollateralCalculator contract
-    ICollateralCalculator public immutable collateralCalculator;
+contract CreditScoreLoanManager {
+    // Define credit tiers
+    enum CreditTier {
+        UNKNOWN,
+        BASIC,
+        STANDARD,
+        PRIME
+    }
 
-    // Reference to the ZKCreditVerifier contract
-    IZKCreditVerifier public immutable zkVerifier;
+    // Reference to the CollateralCalculator contract
+    CollateralCalculator public immutable calculator;
+
+    // Reference to the ZKVerifier contract
+    ZKCreditVerifier public immutable zkVerifier;
 
     // Mapping of proof hashes to addresses that used them
     mapping(bytes32 => address) public proofUsers;
-
+    
     // Mapping of addresses to their credit tier
-    mapping(address => ICollateralCalculator.CreditTier) public borrowerTiers;
+    mapping(address => CreditTier) public borrowerTiers;
 
-    // Event is inherited from ICreditScoreLoanManager
+    // Constants for scaling
+    uint256 private constant EZKL_SCALE = 10000;
+    uint256 private constant CONTRACT_SCALE = 1000;
 
-    // Constructor
-    constructor(address _zkVerifier, address _collateralCalculator) {
-        zkVerifier = IZKCreditVerifier(_zkVerifier);
-        collateralCalculator = ICollateralCalculator(_collateralCalculator);
+    // Events
+    event CreditScoreValidated(address indexed borrower, uint256 creditScoreTier, bytes32 proofHash);
+    event ProofAlreadyUsed(address indexed attemptedUser, address indexed originalUser, bytes32 proofHash);
+
+    constructor(address _zkVerifier, address _calculator) {
+        zkVerifier = ZKCreditVerifier(_zkVerifier);
+        calculator = CollateralCalculator(_calculator);
     }
 
     /**
      * @dev Submit a credit score ZK proof to update borrower's credit tier
      * @param _proof The zkSNARK proof bytes
-     * @param _publicInputs Array of public inputs to the proof. _publicInputs[0] is the borrower address, _publicInputs[1] is the credit score (0-1000 scale)
+     * @param _publicInputs Array of public inputs to the proof
      * @return True if proof verification and update was successful
      */
     function submitCreditScoreProof(
         bytes calldata _proof,
-        uint256[] calldata _publicInputs,
-        uint256 _creditScoreOutput
-    ) external override returns (bool) {
-        return _processProof(_proof, _publicInputs, _creditScoreOutput);
-    }
-
-    /**
-     * @dev Internal function to process the proof verification
-     * @param _proof The zkSNARK proof bytes
-     * @param _publicInputs Array of public inputs to the proof
-     * @param _creditScoreOutput The credit score output to use
-     * @return True if proof verification and update was successful
-     */
-    function _processProof(
-        bytes calldata _proof,
-        uint256[] calldata _publicInputs,
-        uint256 _creditScoreOutput
-    ) internal returns (bool) {
-        // The borrower is the sender of the transaction
-        address borrower = msg.sender;
-        
-        // Generate proof hash for duplication check
-        bytes32 proofHash = keccak256(_proof);
-        
-        // Check if this proof has been used before
-        address originalUser = proofUsers[proofHash];
-        if (originalUser != address(0)) {
-            emit ProofAlreadyUsed(borrower, originalUser, proofHash);
-            revert("Proof already used");
-        }
-        
-        // Verify that the public inputs contain the correct address
-        require(borrower == address(uint160(_publicInputs[0])), "Proof not bound to sender");
-        
-        // Verify the proof is valid and contains at least 2 public inputs
-        require(_publicInputs.length >= 2, "Invalid public inputs length");
+        uint256[] calldata _publicInputs
+    ) external returns (bool) {
+        // Verify the proof is valid - using original unmodified inputs
         bool isValid = zkVerifier.verifyProof(_proof, _publicInputs);
         require(isValid, "Invalid proof");
         
-        // Extract credit score from public inputs
-        uint256 creditScore = _publicInputs[1];
+        // Extract raw credit score from public inputs
+        require(_publicInputs.length > 0, "Missing credit score input");
+        uint256 rawCreditScore = _publicInputs[0];
         
-        // Validate credit score range
-        require(creditScore <= 1000, "Credit score out of range");
+        // Scale the credit score appropriately
+        uint256 scaledCreditScore = scaleScore(rawCreditScore);
         
-        // Store this proof as used
-        proofUsers[proofHash] = borrower;
+        // Store proof hash to prevent reuse
+        bytes32 proofHash = keccak256(_proof);
         
-        // Determine tier based on credit score
-        ICollateralCalculator.CreditTier tier = creditScore > 500 ? 
-            ICollateralCalculator.CreditTier.FAVORABLE :
-            ICollateralCalculator.CreditTier.UNKNOWN;
+        // Check if this proof has been used before
+        if (proofUsers[proofHash] != address(0) && proofUsers[proofHash] != msg.sender) {
+            emit ProofAlreadyUsed(msg.sender, proofUsers[proofHash], proofHash);
+            revert("Proof already used by another address");
+        }
+        
+        // Register this proof as used by this address
+        proofUsers[proofHash] = msg.sender;
+        
+        // Determine tier based on scaled credit score
+        CreditTier tier;
+        if (scaledCreditScore > 500) {
+            tier = CreditTier.PRIME;
+        } else if (scaledCreditScore > 300) {
+            tier = CreditTier.STANDARD;
+        } else {
+            tier = CreditTier.BASIC;
+        }
         
         // Store the borrower's tier
-        borrowerTiers[borrower] = tier;
+        borrowerTiers[msg.sender] = tier;
         
-        // Use the credit score output as tier value for the event
-        uint256 tierValue = _creditScoreOutput;
+        // Update calculator
+        calculator.updateTier(msg.sender, scaledCreditScore, true);
         
         // Emit event for credit score validation
-        emit CreditScoreValidated(borrower, tierValue, proofHash);
+        emit CreditScoreValidated(msg.sender, uint256(tier), proofHash);
         
         return true;
+    }
+    
+    /**
+     * @dev Scale the raw credit score from EZKL format to contract format
+     * @param _rawScore The raw score from EZKL (can be large)
+     * @return The scaled score in 0-1000 range
+     */
+    function scaleScore(uint256 _rawScore) public pure returns (uint256) {
+        // Determine if the score needs scaling
+        if (_rawScore > CONTRACT_SCALE) {
+            // Scale the score down to 0-1000 range
+            uint256 scaledScore = (_rawScore * CONTRACT_SCALE) / EZKL_SCALE;
+            
+            // Cap it at 1000 for safety
+            return scaledScore > CONTRACT_SCALE ? CONTRACT_SCALE : scaledScore;
+        } else {
+            // Already in the correct range
+            return _rawScore;
+        }
     }
 
     /**
@@ -114,12 +126,20 @@ contract CreditScoreLoanManager is ICreditScoreLoanManager {
     function calculateCollateralRequirement(address _borrower, uint256 _loanAmount)
         external
         view
-        override
         returns (uint256 amount, uint256 percentage)
     {
-        ICollateralCalculator.CollateralRequirement memory req =
-            collateralCalculator.getCollateralRequirement(_borrower, _loanAmount);
+        CollateralCalculator.CollateralRequirement memory req =
+            calculator.getCollateralRequirement(_borrower, _loanAmount);
 
         return (req.requiredAmount, req.requiredPercentage);
+    }
+    
+    /**
+     * @dev Get the borrower's credit tier
+     * @param _borrower Address of the borrower
+     * @return Credit tier of the borrower
+     */
+    function getBorrowerTier(address _borrower) external view returns (CreditTier) {
+        return borrowerTiers[_borrower];
     }
 }
