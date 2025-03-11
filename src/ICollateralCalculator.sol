@@ -7,14 +7,11 @@ pragma solidity ^0.8.28;
  */
 interface ICollateralCalculator {
     /**
-     * @dev Enum representing different credit score tiers
+     * @dev Enum representing 2 credit score tiers
      */
     enum CreditTier {
-        UNKNOWN, // Unknown user - 120% collateral
-        LOW, // Low score - 100% collateral
-        MEDIUM, // Medium score - 90% collateral
-        HIGH // High score - 80% collateral
-
+        UNKNOWN, // 150% collateral
+        FAVORABLE // 100% collateral
     }
 
     /**
