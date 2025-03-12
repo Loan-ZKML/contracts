@@ -31,7 +31,7 @@ contract ZKCreditScript is Script {
     {
         // Original implementation unchanged
         bytes memory rawCalldata = vm.readFileBinary("script/calldata.json");
-        console.log("Loaded calldata.json, size:", rawCalldata.length);
+        console2.log("Loaded calldata.json, size:", rawCalldata.length);
 
         // Extract function selector (first 4 bytes)
         bytes4 selector;
@@ -43,12 +43,12 @@ contract ZKCreditScript is Script {
         assembly {
             selectorBytes := selector
         }
-        console.log("Function selector:");
-        console.logBytes32(selectorBytes);
+        console2.log("Function selector:");
+        console2.logBytes32(selectorBytes);
 
         // Verify correct function selector
         if (selector != 0x1e8e1e13) {
-            console.log("WARNING: Function selector mismatch, expected 0x1e8e1e13");
+            console2.log("WARNING: Function selector mismatch, expected 0x1e8e1e13");
             return (hex"", new uint256[](0));
         }
 
@@ -57,7 +57,7 @@ contract ZKCreditScript is Script {
         assembly {
             proofOffset := mload(add(rawCalldata, 36)) // 32 + 4
         }
-        console.log("Proof offset:", proofOffset);
+        console2.log("Proof offset:", proofOffset);
 
         // Calculate position of proof length field
         uint256 proofLengthPos = 4 + proofOffset;
@@ -67,7 +67,7 @@ contract ZKCreditScript is Script {
         assembly {
             proofLength := mload(add(rawCalldata, add(32, proofLengthPos)))
         }
-        console.log("Proof length:", proofLength);
+        console2.log("Proof length:", proofLength);
 
         // Extract proof data
         proof = new bytes(proofLength);
@@ -82,7 +82,7 @@ contract ZKCreditScript is Script {
         assembly {
             inputsOffset := mload(add(rawCalldata, 68)) // 32 + 4 + 32
         }
-        console.log("Inputs offset:", inputsOffset);
+        console2.log("Inputs offset:", inputsOffset);
 
         // Calculate position of inputs length field
         uint256 inputsLengthPos = 4 + inputsOffset;
@@ -92,7 +92,7 @@ contract ZKCreditScript is Script {
         assembly {
             inputsLength := mload(add(rawCalldata, add(32, inputsLengthPos)))
         }
-        console.log("Number of public inputs:", inputsLength);
+        console2.log("Number of public inputs:", inputsLength);
 
         // Extract public inputs
         publicInputs = new uint256[](inputsLength);
@@ -103,7 +103,7 @@ contract ZKCreditScript is Script {
                 value := mload(add(rawCalldata, add(32, pos)))
             }
             publicInputs[i] = value;
-            console.log("Public input", i, ":", value);
+            console2.log("Public input", i, ":", value);
         }
 
         return (proof, publicInputs);
@@ -111,61 +111,61 @@ contract ZKCreditScript is Script {
 
     function run() external {
         // First, use the Anvil account to fund our test address
-        console.log("Step 1: Funding test address from Anvil account");
+        console2.log("Step 1: Funding test address from Anvil account");
         vm.startBroadcast(ANVIL_PRIVATE_KEY);
 
         // Send 1 ETH to model test address to cover gas costs
         payable(TEST_ADDRESS).transfer(1 ether);
-        console.log("Transferred 1 ETH from Anvil account to test address");
+        console2.log("Transferred 1 ETH from Anvil account to test address");
 
         vm.stopBroadcast();
 
         // proceed with the test using funded address
-        console.log("Step 2: Deploying contracts with test address");
+        console2.log("Step 2: Deploying contracts with test address");
         vm.startBroadcast(TEST_PRIVATE_KEY);
 
-        console.log("Deploying contracts as:", vm.addr(TEST_PRIVATE_KEY));
+        console2.log("Deploying contracts as:", vm.addr(TEST_PRIVATE_KEY));
 
         // Deploy contracts
         Halo2Verifier halo2Verifier = new Halo2Verifier();
-        console.log("Deployed Halo2Verifier at:", address(halo2Verifier));
+        console2.log("Deployed Halo2Verifier at:", address(halo2Verifier));
 
         ZKCreditVerifier zkVerifier = new ZKCreditVerifier(address(halo2Verifier));
-        console.log("Deployed ZKCreditVerifier at:", address(zkVerifier));
+        console2.log("Deployed ZKCreditVerifier at:", address(zkVerifier));
 
         CollateralCalculator calculator = new CollateralCalculator();
-        console.log("Deployed CollateralCalculator at:", address(calculator));
+        console2.log("Deployed CollateralCalculator at:", address(calculator));
 
         CreditScoreLoanManager loanManager =
             new CreditScoreLoanManager(address(zkVerifier), address(calculator));
-        console.log("Deployed ScaledCreditScoreLoanManager at:", address(loanManager));
+        console2.log("Deployed ScaledCreditScoreLoanManager at:", address(loanManager));
 
         // Check initial collateral requirement
         // Get initial collateral requirement struct
         ICollateralCalculator.CollateralRequirement memory initialRequirement =
             calculator.getCollateralRequirement(TEST_ADDRESS, 1 ether);
-        console.log("Initial collateral requirement:");
-        console.log(" - Percentage:", initialRequirement.requiredPercentage);
-        console.log(" - Amount for 1 ETH loan:", initialRequirement.requiredAmount);
-        console.log(" - Tier:", uint8(initialRequirement.tier));
+        console2.log("Initial collateral requirement:");
+        console2.log(" - Percentage:", initialRequirement.requiredPercentage);
+        console2.log(" - Amount for 1 ETH loan:", initialRequirement.requiredAmount);
+        console2.log(" - Tier:", uint8(initialRequirement.tier));
 
         // Load proof and original public inputs
         (bytes memory proof, uint256[] memory publicInputs) = loadProofAndInputs();
 
         // Validate we have a proper proof
         if (proof.length == 0) {
-            console.log("Failed to load valid proof, aborting");
+            console2.log("Failed to load valid proof, aborting");
             vm.stopBroadcast();
             return;
         }
 
         // Test direct verification first
-        console.log("Testing direct verification with Halo2Verifier...");
+        console2.log("Testing direct verification with Halo2Verifier...");
         try halo2Verifier.verifyProof(proof, publicInputs) returns (bool directResult) {
-            console.log("Direct verification result:", directResult);
+            console2.log("Direct verification result:", directResult);
         } catch (bytes memory reason) {
-            console.log("Direct verification reverted:");
-            console.logBytes(reason);
+            console2.log("Direct verification reverted:");
+            console2.logBytes(reason);
         }
 
         // Log raw credit score
@@ -173,39 +173,39 @@ contract ZKCreditScript is Script {
         if (publicInputs.length > 0) {
             rawCreditScore = publicInputs[0];
         }
-        console.log("Raw credit score from proof:", rawCreditScore);
+        console2.log("Raw credit score from proof:", rawCreditScore);
         
         // Calculate what the scaled value will be (for display only)
         uint256 scaledScore = (rawCreditScore * 1000) / 10000;
         if (scaledScore > 1000) scaledScore = 1000;
         console.log("This will be scaled to approximately:", scaledScore);
 
-        console.log("Submitting proof from address:", TEST_ADDRESS);
+        console2.log("Submitting proof from address:", TEST_ADDRESS);
 
         // Use the original inputs without modification
         try loanManager.submitCreditScoreProof(proof, publicInputs) returns (bool success) {
             if (success) {
-                console.log("Proof verification successful!");
+                console2.log("Proof verification successful!");
 
                 // Check updated collateral requirement
                 ICollateralCalculator.CollateralRequirement memory newRequirement =
                     calculator.getCollateralRequirement(TEST_ADDRESS, 1 ether);
-                console.log("Updated collateral requirement:");
-                console.log(" - Percentage:", newRequirement.requiredPercentage);
-                console.log(" - Amount for 1 ETH loan:", newRequirement.requiredAmount);
-                console.log(" - Tier:", uint8(newRequirement.tier));
+                console2.log("Updated collateral requirement:");
+                console2.log(" - Percentage:", newRequirement.requiredPercentage);
+                console2.log(" - Amount for 1 ETH loan:", newRequirement.requiredAmount);
+                console2.log(" - Tier:", uint8(newRequirement.tier));
 
                 if (newRequirement.requiredPercentage == 10000) {
-                    console.log("Successfully qualified for favorable rate (100% collateral)");
+                    console2.log("Successfully qualified for favorable rate (100% collateral)");
                 } else {
-                    console.log("Failed to qualify for favorable rate");
+                    console2.log("Failed to qualify for favorable rate");
                 }
             } else {
-                console.log("Proof verification failed");
+                console2.log("Proof verification failed");
             }
         } catch (bytes memory reason) {
-            console.log("Proof submission reverted:");
-            console.logBytes(reason);
+            console2.log("Proof submission reverted:");
+            console2.logBytes(reason);
         }
 
         vm.stopBroadcast();
