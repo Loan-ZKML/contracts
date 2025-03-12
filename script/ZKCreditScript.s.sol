@@ -159,7 +159,9 @@ contract ZKCreditScript is Script {
             return;
         }
 
-        // Test direct verification first
+        // Test direct verification first for debugging
+        // Redundant because the loanManager's submitCreditScoreProof() 
+        // would enforce this
         console2.log("Testing direct verification with Halo2Verifier...");
         try halo2Verifier.verifyProof(proof, publicInputs) returns (bool directResult) {
             console2.log("Direct verification result:", directResult);
