@@ -30,15 +30,11 @@ contract CollateralCalculator is ICollateralCalculator {
     }
 
     // Update a borrower's tier based on their verified credit score
-    function updateTier(address borrower, uint256 creditScore, bool proofValidated)
-        public
-        returns (CreditTier)
-    {
+    function updateTier(address borrower, uint256 creditScore, bool proofValidated) public returns (CreditTier) {
         require(proofValidated, "Invalid proof");
 
         // Simplified logic: If score > 0.5 (500 in scaled range), set favorable tier
-        CreditTier newTier =
-            (creditScore > 500) ? CreditTier.FAVORABLE : CreditTier.UNKNOWN;
+        CreditTier newTier = (creditScore > 500) ? CreditTier.FAVORABLE : CreditTier.UNKNOWN;
 
         // Update the borrower's tier
         addressTiers[borrower] = newTier;

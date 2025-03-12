@@ -16,8 +16,7 @@ contract ZKCreditTest is Test {
     CreditScoreLoanManager public loanManager;
 
     address constant TEST_ADDRESS = 0x276ef71c8F12508d187E7D8Fcc2FE6A38a5884B1;
-    uint256 constant TEST_PRIVATE_KEY =
-        0x08c216a5cbe31fd3c8095aae062a101c47c0f6110d738b97c5b1572993a2e665;
+    uint256 constant TEST_PRIVATE_KEY = 0x08c216a5cbe31fd3c8095aae062a101c47c0f6110d738b97c5b1572993a2e665;
 
     // Path to the proof file
     string constant CALLDATA_PATH = "script/calldata.json";
@@ -31,7 +30,8 @@ contract ZKCreditTest is Test {
     }
 
     function testDefaultTierIsUnknown() public view {
-        ICollateralCalculator.CollateralRequirement memory tier = calculator.getCollateralRequirement(TEST_ADDRESS, 1 ether);        
+        ICollateralCalculator.CollateralRequirement memory tier =
+            calculator.getCollateralRequirement(TEST_ADDRESS, 1 ether);
 
         assertEq(tier.requiredPercentage, 15000, "Default collateral should be 150%");
         assertEq(tier.requiredAmount, 1.5 ether, "Default collateral amount should be 1.5 ETH for 1 ETH loan");
@@ -113,7 +113,7 @@ contract ZKCreditTest is Test {
         }
 
         // bool success = loanManager.submitProof(proof, publicInputs, loanAmount);
-        
+
         // Use zkVerifier for proof verification instead of calculator
         bool verified = zkVerifier.verifyProof(proof, publicInputs);
         assertTrue(verified, "Proof verification should succeed");
@@ -125,18 +125,19 @@ contract ZKCreditTest is Test {
 
         // Then check the collateral requirement
         uint256 loanAmount = 600;
-        ICollateralCalculator.CollateralRequirement memory tier = calculator.getCollateralRequirement(TEST_ADDRESS, loanAmount);
-        assertEq(uint256(tier.tier), uint256(ICollateralCalculator.CreditTier.FAVORABLE), "Borrower should be assigned to FAVORABLE tier");
+        ICollateralCalculator.CollateralRequirement memory tier =
+            calculator.getCollateralRequirement(TEST_ADDRESS, loanAmount);
+        assertEq(
+            uint256(tier.tier),
+            uint256(ICollateralCalculator.CreditTier.FAVORABLE),
+            "Borrower should be assigned to FAVORABLE tier"
+        );
 
         vm.stopPrank();
     }
 
     // Helper function to slice bytes
-    function slice(bytes memory data, uint256 start, uint256 length)
-        internal
-        pure
-        returns (bytes memory)
-    {
+    function slice(bytes memory data, uint256 start, uint256 length) internal pure returns (bytes memory) {
         bytes memory result = new bytes(length);
         for (uint256 i = 0; i < length; i++) {
             if (start + i < data.length) {

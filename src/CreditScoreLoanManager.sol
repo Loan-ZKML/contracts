@@ -25,7 +25,7 @@ contract CreditScoreLoanManager is ICreditScoreLoanManager {
 
     // Mapping of proof hashes to addresses that used them
     mapping(bytes32 => address) public proofUsers;
-    
+
     // Mapping of addresses to their credit tier
     mapping(address => CreditTier) public borrowerTiers;
 
@@ -48,26 +48,26 @@ contract CreditScoreLoanManager is ICreditScoreLoanManager {
         // Verify the proof is valid - using original unmodified inputs
         bool isValid = zkVerifier.verifyProof(_proof, _publicInputs);
         require(isValid, "Invalid proof");
-        
+
         // Extract raw credit score from public inputs
         require(_publicInputs.length > 0, "Missing credit score input");
         uint256 rawCreditScore = _publicInputs[0];
-        
+
         // Scale the credit score appropriately
         uint256 scaledCreditScore = scaleScore(rawCreditScore);
-        
+
         // Store proof hash to prevent reuse
         bytes32 proofHash = keccak256(_proof);
-        
+
         // Check if this proof has been used before
         if (proofUsers[proofHash] != address(0) && proofUsers[proofHash] != msg.sender) {
             emit ProofAlreadyUsed(msg.sender, proofUsers[proofHash], proofHash);
             revert("Proof already used by another address");
         }
-        
+
         // Register this proof as used by this address
         proofUsers[proofHash] = msg.sender;
-        
+
         // Determine tier based on scaled credit score
         CreditTier tier;
         if (scaledCreditScore > 500) {
@@ -77,19 +77,19 @@ contract CreditScoreLoanManager is ICreditScoreLoanManager {
         } else {
             tier = CreditTier.BASIC;
         }
-        
+
         // Store the borrower's tier
         borrowerTiers[msg.sender] = tier;
-        
+
         // Update calculator
         calculator.updateTier(msg.sender, scaledCreditScore, true);
-        
+
         // Emit event for credit score validation
         emit CreditScoreValidated(msg.sender, uint256(tier), proofHash);
-        
+
         return true;
     }
-    
+
     /**
      * @dev Scale the raw credit score from EZKL format to contract format
      * @param _rawScore The raw score from EZKL (can be large)
@@ -100,7 +100,7 @@ contract CreditScoreLoanManager is ICreditScoreLoanManager {
         if (_rawScore > CONTRACT_SCALE) {
             // Scale the score down to 0-1000 range
             uint256 scaledScore = (_rawScore * CONTRACT_SCALE) / EZKL_SCALE;
-            
+
             // Cap it at 1000 for safety
             return scaledScore > CONTRACT_SCALE ? CONTRACT_SCALE : scaledScore;
         } else {
@@ -126,7 +126,7 @@ contract CreditScoreLoanManager is ICreditScoreLoanManager {
 
         return (req.requiredAmount, req.requiredPercentage);
     }
-    
+
     /**
      * @dev Get the borrower's credit tier
      * @param _borrower Address of the borrower

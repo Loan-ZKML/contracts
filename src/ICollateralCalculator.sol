@@ -12,6 +12,7 @@ interface ICollateralCalculator {
     enum CreditTier {
         UNKNOWN, // 150% collateral
         FAVORABLE // 100% collateral
+
     }
 
     /**

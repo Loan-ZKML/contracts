@@ -24,9 +24,7 @@ interface ICreditScoreLoanManager {
         uint256 collateralPercentage
     );
 
-    event ProofAlreadyUsed(
-        address indexed attemptedUser, address indexed originalUser, bytes32 proofHash
-    );
+    event ProofAlreadyUsed(address indexed attemptedUser, address indexed originalUser, bytes32 proofHash);
 
     /**
      * @dev Submit a credit score ZK proof to update borrower's credit tier

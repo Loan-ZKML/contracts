@@ -15,20 +15,14 @@ import "../src/ICollateralCalculator.sol";
 contract ZKCreditScript is Script {
     // The test account from proof generation
     address constant TEST_ADDRESS = 0x276ef71c8F12508d187E7D8Fcc2FE6A38a5884B1;
-    uint256 constant TEST_PRIVATE_KEY =
-        0x08c216a5cbe31fd3c8095aae062a101c47c0f6110d738b97c5b1572993a2e665;
+    uint256 constant TEST_PRIVATE_KEY = 0x08c216a5cbe31fd3c8095aae062a101c47c0f6110d738b97c5b1572993a2e665;
 
     // Anvil's first pre-funded account
     address constant ANVIL_ACCOUNT = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
-    uint256 constant ANVIL_PRIVATE_KEY =
-        0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+    uint256 constant ANVIL_PRIVATE_KEY = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
 
     // Load and extract both proof and public inputs from calldata.json
-    function loadProofAndInputs()
-        internal
-        view
-        returns (bytes memory proof, uint256[] memory publicInputs)
-    {
+    function loadProofAndInputs() internal view returns (bytes memory proof, uint256[] memory publicInputs) {
         // Original implementation unchanged
         bytes memory rawCalldata = vm.readFileBinary("script/calldata.json");
         console2.log("Loaded calldata.json, size:", rawCalldata.length);
@@ -136,8 +130,7 @@ contract ZKCreditScript is Script {
         CollateralCalculator calculator = new CollateralCalculator();
         console2.log("Deployed CollateralCalculator at:", address(calculator));
 
-        CreditScoreLoanManager loanManager =
-            new CreditScoreLoanManager(address(zkVerifier), address(calculator));
+        CreditScoreLoanManager loanManager = new CreditScoreLoanManager(address(zkVerifier), address(calculator));
         console2.log("Deployed ScaledCreditScoreLoanManager at:", address(loanManager));
 
         // Check initial collateral requirement
@@ -160,7 +153,7 @@ contract ZKCreditScript is Script {
         }
 
         // Test direct verification first for debugging
-        // Redundant because the loanManager's submitCreditScoreProof() 
+        // Redundant because the loanManager's submitCreditScoreProof()
         // would enforce this
         console2.log("Testing direct verification with Halo2Verifier...");
         try halo2Verifier.verifyProof(proof, publicInputs) returns (bool directResult) {
