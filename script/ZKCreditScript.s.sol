@@ -176,11 +176,6 @@ contract ZKCreditScript is Script {
             rawCreditScore = publicInputs[0];
         }
         console2.log("Raw credit score from proof:", rawCreditScore);
-        
-        // Calculate what the scaled value will be (for display only)
-        uint256 scaledScore = (rawCreditScore * 1000) / 10000;
-        if (scaledScore > 1000) scaledScore = 1000;
-        console.log("This will be scaled to approximately:", scaledScore);
 
         console2.log("Submitting proof from address:", TEST_ADDRESS);
 

@@ -32,12 +32,9 @@ interface ICreditScoreLoanManager {
      * @dev Submit a credit score ZK proof to update borrower's credit tier
      * @param _proof The zkSNARK proof bytes
      * @param _publicInputs Array of public inputs to the proof (may include the borrower's address)
-     * @param _creditScoreOutput The credit score resulting from the computation
      * @return True if proof verification and update was successful
      */
-    function submitCreditScoreProof(bytes calldata _proof, uint256[] calldata _publicInputs, uint256 _creditScoreOutput)
-        external
-        returns (bool);
+    function submitCreditScoreProof(bytes calldata _proof, uint256[] calldata _publicInputs) external returns (bool);
 
     /**
      * @dev Calculate collateral requirement without submitting proof (preview function)

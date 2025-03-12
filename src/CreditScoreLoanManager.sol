@@ -3,13 +3,13 @@ pragma solidity ^0.8.28;
 
 import "./CollateralCalculator.sol";
 import "./ZKCreditVerifier.sol";
+import "./ICreditScoreLoanManager.sol";
 
 /**
  * @title CreditScoreLoanManager
  * @dev Variant of CreditScoreLoanManager that handles EZKL's output scaling
  */
-contract CreditScoreLoanManager {
-    // Define credit tiers
+contract CreditScoreLoanManager is ICreditScoreLoanManager {
     enum CreditTier {
         UNKNOWN,
         BASIC,
@@ -33,10 +33,6 @@ contract CreditScoreLoanManager {
     uint256 private constant EZKL_SCALE = 10000;
     uint256 private constant CONTRACT_SCALE = 1000;
 
-    // Events
-    event CreditScoreValidated(address indexed borrower, uint256 creditScoreTier, bytes32 proofHash);
-    event ProofAlreadyUsed(address indexed attemptedUser, address indexed originalUser, bytes32 proofHash);
-
     constructor(address _zkVerifier, address _calculator) {
         zkVerifier = ZKCreditVerifier(_zkVerifier);
         calculator = CollateralCalculator(_calculator);
@@ -45,13 +41,10 @@ contract CreditScoreLoanManager {
     /**
      * @dev Submit a credit score ZK proof to update borrower's credit tier
      * @param _proof The zkSNARK proof bytes
-     * @param _publicInputs Array of public inputs to the proof
+     * @param _publicInputs Array of public inputs to the proof (may include the borrower's address)
      * @return True if proof verification and update was successful
      */
-    function submitCreditScoreProof(
-        bytes calldata _proof,
-        uint256[] calldata _publicInputs
-    ) external returns (bool) {
+    function submitCreditScoreProof(bytes calldata _proof, uint256[] calldata _publicInputs) external returns (bool) {
         // Verify the proof is valid - using original unmodified inputs
         bool isValid = zkVerifier.verifyProof(_proof, _publicInputs);
         require(isValid, "Invalid proof");
