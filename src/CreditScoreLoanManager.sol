@@ -10,13 +10,6 @@ import "./ICreditScoreLoanManager.sol";
  * @dev Variant of CreditScoreLoanManager that handles EZKL's output scaling
  */
 contract CreditScoreLoanManager is ICreditScoreLoanManager {
-    enum CreditTier {
-        UNKNOWN,
-        BASIC,
-        STANDARD,
-        PRIME
-    }
-
     // Reference to the CollateralCalculator contract
     CollateralCalculator public immutable calculator;
 
@@ -27,7 +20,7 @@ contract CreditScoreLoanManager is ICreditScoreLoanManager {
     mapping(bytes32 => address) public proofUsers;
 
     // Mapping of addresses to their credit tier
-    mapping(address => CreditTier) public borrowerTiers;
+    mapping(address => ICollateralCalculator.CreditTier) public borrowerTiers;
 
     // Constants for scaling
     uint256 private constant EZKL_SCALE = 10000;
@@ -69,13 +62,11 @@ contract CreditScoreLoanManager is ICreditScoreLoanManager {
         proofUsers[proofHash] = msg.sender;
 
         // Determine tier based on scaled credit score
-        CreditTier tier;
+        ICollateralCalculator.CreditTier tier;
         if (scaledCreditScore > 500) {
-            tier = CreditTier.PRIME;
-        } else if (scaledCreditScore > 300) {
-            tier = CreditTier.STANDARD;
+            tier = ICollateralCalculator.CreditTier.FAVORABLE;
         } else {
-            tier = CreditTier.BASIC;
+            tier = ICollateralCalculator.CreditTier.UNKNOWN;
         }
 
         // Store the borrower's tier
@@ -132,7 +123,7 @@ contract CreditScoreLoanManager is ICreditScoreLoanManager {
      * @param _borrower Address of the borrower
      * @return Credit tier of the borrower
      */
-    function getBorrowerTier(address _borrower) external view returns (CreditTier) {
+    function getBorrowerTier(address _borrower) external view returns (ICollateralCalculator.CreditTier) {
         return borrowerTiers[_borrower];
     }
 }
