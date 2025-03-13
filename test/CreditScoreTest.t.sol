@@ -39,7 +39,7 @@ contract ZKCreditTest is Test {
 
     function testProof() public {
         // Read the binary calldata file
-        bytes memory rawCalldata = vm.readFileBinary("script/calldata.json");
+        bytes memory rawCalldata = vm.readFileBinary(CALLDATA_PATH);
 
         // Extract function selector (first 4 bytes)
         bytes4 selector;
