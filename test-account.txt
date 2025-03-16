@@ -1,0 +1,3 @@
+# This is a test account do not use in production
+# Address:     0x276ef71c8F12508d187E7D8Fcc2FE6A38a5884B1
+# Private key: 0x08c216a5cbe31fd3c8095aae062a101c47c0f6110d738b97c5b1572993a2e665
