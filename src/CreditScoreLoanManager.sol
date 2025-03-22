@@ -4,12 +4,15 @@ pragma solidity ^0.8.28;
 import "./CollateralCalculator.sol";
 import "./ZKCreditVerifier.sol";
 import "./ICreditScoreLoanManager.sol";
-
+import "forge-std/console2.sol";
 /**
  * @title CreditScoreLoanManager
  * @dev Variant of CreditScoreLoanManager that handles EZKL's output scaling
  */
+
 contract CreditScoreLoanManager is ICreditScoreLoanManager {
+    // Event emitted when an address is successfully verified in a proof
+    event AddressVerified(address indexed user, bytes32 indexed proofHash);
     // Reference to the CollateralCalculator contract
     CollateralCalculator public immutable calculator;
 
@@ -22,9 +25,12 @@ contract CreditScoreLoanManager is ICreditScoreLoanManager {
     // Mapping of addresses to their credit tier
     mapping(address => ICollateralCalculator.CreditTier) public borrowerTiers;
 
-    // Constants for scaling
-    uint256 private constant EZKL_SCALE = 10000;
-    uint256 private constant CONTRACT_SCALE = 1000;
+    // Mapping of addresses to their credit scores (0-1000 range)
+    mapping(address => uint256) private creditScores;
+    
+    // EZKL scaling constants - used to convert from EZKL's scaled output to 0-1000 range
+    uint256 private constant EZKL_BASE_SCALE_NUMERATOR = 67219;  // Determined from EZKL's scaling analysis
+    uint256 private constant EZKL_BASE_SCALE_DENOMINATOR = 1;
 
     constructor(address _zkVerifier, address _calculator) {
         zkVerifier = ZKCreditVerifier(_zkVerifier);
