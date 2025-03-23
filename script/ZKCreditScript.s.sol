@@ -169,7 +169,7 @@ contract ZKCreditScript is Script {
             rawCreditScore = publicInputs[0];
         }
         console2.log("Raw credit score from proof:", rawCreditScore);
-        
+
         // Calculate descaled credit score (using the same logic as CreditScoreLoanManager)
         uint256 EZKL_BASE_SCALE_NUMERATOR = 67219; // Based on the observed scaling factor
         uint256 EZKL_BASE_SCALE_DENOMINATOR = 1;
@@ -189,7 +189,7 @@ contract ZKCreditScript is Script {
                 console2.log(" - Percentage:", newRequirement.requiredPercentage);
                 console2.log(" - Amount for 1 ETH loan:", newRequirement.requiredAmount);
                 console2.log(" - Tier:", uint8(newRequirement.tier));
-                
+
                 // Get the stored credit score from the loan manager
                 uint256 storedScore = loanManager.getCreditScore(TEST_ADDRESS);
                 console2.log("Stored credit score in contract:", storedScore);
