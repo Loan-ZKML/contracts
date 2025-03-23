@@ -9,6 +9,7 @@ fs_permissions = [
     { access = "read", path = "./test" },
     { access = "read", path = "./script" },
 ]
+ignored_warnings = { "5667" = ["src/Halo2Verifier.sol"], "2018" = ["src/Halo2Verifier.sol"] }
 
 [rpc_endpoints]
 anvil = "http://localhost:8545"
